@@ -3,14 +3,16 @@
 # Utilities
 Rm←¬∘∊/⊣
 In←∊/⊣
+Split←((⊢-˜+`×¬)∘=⊔⊢)
 _ch←{(≥⟜('A'+32×𝕗)∧<⟜('Z'+32×𝕗))} # is piece on given side
 I←/○⥊⟜(↕≢)
 Lc←⊑+⟜(32×1="A["⊸⍋)
 IB←{x‿y:(x<8)∧(y<8)∧(x≥0)∧y≥0} # In bounds
 GB←{l←⟨⟩,𝕨⊸{l∾↩⋈𝕩,𝕨+𝕩}•_while_ IB 𝕩+𝕨,l} # gen bishop
 
-# Chess Board coordinates
+
 # un←"♟♟♟♟♟♟♟♟♜♞♝♛♚♝♞♜♙♙♙♙♙♙♙♙♖♘♗♕♔♗♘♖"
+# Basic game state
 b←[
   "RNBQKBNR"
   "PPPPPPPP"
@@ -21,7 +23,7 @@ b←[
   "pppppppp"
   "rnbqkbnr"
 ]
-mv←0 # White: 0
+mv←1 # White: 1
 
 # Find unblocked moves for a piece. Does not look for checks.
 UM←{
@@ -29,7 +31,7 @@ UM←{
   Blk←{⟨⟩:𝕩;l←𝕩⊑b,𝕩/˜∧`('.'=l)∨((¬mv)_ch l)} # Blocking
   {
      'p':
-      f←mv⌽c∾˜¨r+1‿2×¯1⋆mv # Calculate forward moves
+      f←mv⌽c∾˜¨(≥⟜0∧<⟜8)⊸/r+1‿2×¯1⋆mv # Calculate forward moves
       f↩f/˜∧`'.'=f⊑b    # remove blocked squares
       d←(r+¯1⋆mv)∾¨(<⟜8∧≥⟜0)¨⊸/c+1‿¯1 # add the captures
       f∾↩d/˜(¬mv)_ch d⊑b
@@ -79,3 +81,37 @@ Move←{
                    # useful for promotion.
   '.'⌾(r‿c⊸⊑)p⌾(r1‿c1⊸⊑)b
 }
+
+CM←{ # Has the player lost
+  𝕊 b‿mv:
+  ps←⊑I b='K'+32×mv
+  (IC b‿mv)∧⟨⟩≡UM ⟨'k',ps,b,mv⟩
+}
+
+# Actual game
+{
+  b‿mv:
+  •Show b
+  •Out "Enter Move"
+  •Out (mv⊑"Black"‿"White")∾" to move"
+  •Show I mv _ch b
+	r‿c‿r1‿c1←•BQN¨' ' Split •GetLine@
+	p←r‿c⊑b
+  {
+    ⊑⟨r1‿c1⟩∊•Show UM⟨Lc p,r‿c,b,mv⟩ ?
+      # Promotion
+      ep ←{((r1=0)∧'p'=𝕩)∨((r1=7)∧'P'=𝕩) ? •Out "Enter promotion piece", ⊑•GetLine@ ; 𝕩}p
+      # Now check and do the actual move.
+      nb←r‿c‿r1‿c1‿p Move b
+      {
+        ¬IC nb‿mv ?
+          ⟨nb,¬mv⟩
+        ;
+          •Show "Illegal move (move into check)."
+          b‿mv
+      }
+    ; 
+      •Show "Illegal move (blocked)."
+      b‿mv
+  }
+} •_while_ (¬∘CM) b‿mv

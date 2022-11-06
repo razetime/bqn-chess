@@ -1,2 +1,0 @@
-•Import "chess.bqn"
-
