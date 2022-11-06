@@ -95,7 +95,8 @@ CM←{ # Has the player lost
   •Out "Enter Move"
   •Out (mv⊑"Black"‿"White")∾" to move"
   •Show I mv _ch b
-	r‿c‿r1‿c1←•BQN¨' ' Split •GetLine@
+	c‿r‿c1‿r1←(•GetLine@)-"a0a0"
+	r‿r1 8⊸-↩
 	p←r‿c⊑b
   {
     ⊑⟨r1‿c1⟩∊•Show UM⟨Lc p,r‿c,b,mv⟩ ?
